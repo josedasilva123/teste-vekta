@@ -52,16 +52,17 @@ MONGODB_DATABASE=chatterbox
 
 ## Docker Compose (opcional)
 
-Disponível para quem tiver Docker. Apenas MongoDB:
+O `docker-compose.yml` fica na **raiz do repositório** e sobe MongoDB, API e Web juntos:
+
+```bash
+# na raiz do projeto
+docker compose up --build
+```
+
+Apenas MongoDB (útil para dev local da API sem container da API):
 
 ```bash
 docker compose up mongodb -d
-```
-
-Stack completa (API + MongoDB):
-
-```bash
-docker compose --profile full up --build
 ```
 
 ## Endpoints

@@ -37,6 +37,19 @@ src/
 
 ## Desenvolvimento
 
+### Com Docker (API + Web juntos)
+
+Na raiz do repositório:
+
+```powershell
+copy api\.env.example api\.env
+docker compose up --build
+```
+
+A aplicação abre em `http://localhost:5173`.
+
+### Sem Docker
+
 1. Copie `.env.example` para `.env` e ajuste a URL da API se necessário.
 2. Inicie a API em [`../api/`](../api/).
 3. Instale dependências e rode o front:

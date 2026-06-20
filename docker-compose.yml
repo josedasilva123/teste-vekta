@@ -1,5 +1,5 @@
-# Opcional: use apenas se tiver espaço e Docker disponível.
-# Para desenvolvimento local sem Docker, veja README.md (MongoDB local ou Atlas).
+# Stack completa: MongoDB + API + Web
+# Pré-requisito: copie api/.env.example → api/.env e ajuste as variáveis
 
 services:
   mongodb:
@@ -18,21 +18,32 @@ services:
 
   api:
     build:
-      context: .
+      context: ./api
       dockerfile: docker/Dockerfile
     container_name: chatterbox-api
     restart: unless-stopped
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - ./api/.env
     environment:
       MONGODB_URI: mongodb://mongodb:27017
     depends_on:
       mongodb:
         condition: service_healthy
-    profiles:
-      - full
+
+  web:
+    build:
+      context: ./web
+      dockerfile: docker/Dockerfile
+    container_name: chatterbox-web
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      - api
 
 volumes:
   mongodb_data:
