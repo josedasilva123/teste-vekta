@@ -40,6 +40,10 @@ export function ChatPage() {
     return items
   }, [])
 
+  const handleConversationUpdated = useCallback(() => {
+    refreshConversations().catch(() => undefined)
+  }, [refreshConversations])
+
   useEffect(() => {
     refreshConversations()
       .then(async (items) => {
@@ -66,9 +70,8 @@ export function ChatPage() {
   } = useChatWebSocket({
     conversationId: activeConversationId,
     token,
-    onConversationUpdated: () => {
-      refreshConversations().catch(() => undefined)
-    },
+    enabled: !isLoadingConversations && Boolean(activeConversationId),
+    onConversationUpdated: handleConversationUpdated,
   })
 
   useEffect(() => {

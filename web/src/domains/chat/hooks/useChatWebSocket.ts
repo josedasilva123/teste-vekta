@@ -5,6 +5,7 @@ import type { ChatMessage, WsIncomingEvent } from '@/domains/chat/types'
 type UseChatWebSocketOptions = {
   conversationId: string | null
   token: string | null
+  enabled?: boolean
   onConversationUpdated?: () => void
 }
 
@@ -18,9 +19,21 @@ type UseChatWebSocketResult = {
   setMessages: (messages: ChatMessage[]) => void
 }
 
+function closeWebSocket(ws: WebSocket): void {
+  ws.onopen = null
+  ws.onclose = null
+  ws.onerror = null
+  ws.onmessage = null
+
+  if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+    ws.close()
+  }
+}
+
 export function useChatWebSocket({
   conversationId,
   token,
+  enabled = true,
   onConversationUpdated,
 }: UseChatWebSocketOptions): UseChatWebSocketResult {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -30,9 +43,12 @@ export function useChatWebSocket({
   const [error, setError] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const streamingIdRef = useRef<string>('streaming-ai')
+  const onConversationUpdatedRef = useRef(onConversationUpdated)
+
+  onConversationUpdatedRef.current = onConversationUpdated
 
   useEffect(() => {
-    if (!conversationId || !token) {
+    if (!enabled || !conversationId || !token) {
       setIsConnected(false)
       return
     }
@@ -49,6 +65,9 @@ export function useChatWebSocket({
 
     ws.onclose = () => {
       setIsConnected(false)
+      if (wsRef.current === ws) {
+        wsRef.current = null
+      }
     }
 
     ws.onerror = () => {
@@ -91,7 +110,7 @@ export function useChatWebSocket({
         ])
         setStreamingText('')
         setIsSending(false)
-        onConversationUpdated?.()
+        onConversationUpdatedRef.current?.()
         return
       }
 
@@ -103,10 +122,12 @@ export function useChatWebSocket({
     }
 
     return () => {
-      ws.close()
-      wsRef.current = null
+      closeWebSocket(ws)
+      if (wsRef.current === ws) {
+        wsRef.current = null
+      }
     }
-  }, [conversationId, token, onConversationUpdated])
+  }, [conversationId, token, enabled])
 
   const sendMessage = useCallback(
     (content: string) => {
