@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 
 from google import genai
-from google.genai import types
+from google.genai import errors, types
 
 from chatterbox.domain.entities.ai_stream_event import AIStreamEvent
 from chatterbox.domain.entities.message import Message
@@ -21,6 +21,7 @@ class GeminiService:
     def __init__(self, settings: Settings) -> None:
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._model = settings.gemini_model
+        self._fallback_model = settings.gemini_fallback_model
         self._settings = settings
 
     async def generate_reply(self, history: list[Message]) -> str:
@@ -50,15 +51,9 @@ class GeminiService:
         contents = build_model_contents(history, self._settings.ai_max_history_turns)
         accumulated = ""
 
-        stream = await self._client.aio.models.generate_content_stream(
-            model=self._model,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=FLAT_EARTH_SYSTEM_PROMPT,
-                temperature=self._settings.gemini_temperature,
-                top_p=self._settings.gemini_top_p,
-                max_output_tokens=self._settings.gemini_max_output_tokens,
-            ),
+        stream = await self._generate_content_stream(
+            contents,
+            FLAT_EARTH_SYSTEM_PROMPT,
         )
         async for chunk in stream:
             text = chunk.text or ""
@@ -79,17 +74,49 @@ class GeminiService:
             yield AIStreamEvent(kind="replace", content=final_text)
 
     async def _generate(self, contents: list[types.Content], system_instruction: str) -> str:
-        response = await self._client.aio.models.generate_content(
-            model=self._model,
-            contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=self._settings.gemini_temperature,
-                top_p=self._settings.gemini_top_p,
-                max_output_tokens=self._settings.gemini_max_output_tokens,
-            ),
+        return await self._generate_with_fallback(contents, system_instruction)
+
+    def _generation_config(self, system_instruction: str) -> types.GenerateContentConfig:
+        return types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            temperature=self._settings.gemini_temperature,
+            top_p=self._settings.gemini_top_p,
+            max_output_tokens=self._settings.gemini_max_output_tokens,
         )
-        return response.text or ""
+
+    async def _generate_with_fallback(
+        self,
+        contents: list[types.Content],
+        system_instruction: str,
+    ) -> str:
+        for model in (self._model, self._fallback_model):
+            try:
+                response = await self._client.aio.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=self._generation_config(system_instruction),
+                )
+                return response.text or ""
+            except errors.APIError:
+                if model == self._fallback_model:
+                    raise
+        return ""
+
+    async def _generate_content_stream(
+        self,
+        contents: list[types.Content],
+        system_instruction: str,
+    ):
+        for model in (self._model, self._fallback_model):
+            try:
+                return await self._client.aio.models.generate_content_stream(
+                    model=model,
+                    contents=contents,
+                    config=self._generation_config(system_instruction),
+                )
+            except errors.APIError:
+                if model == self._fallback_model:
+                    raise
 
 
 def _latest_user_message(history: list[Message]) -> str:
