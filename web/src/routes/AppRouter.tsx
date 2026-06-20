@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/domains/auth/AuthProvider'
+import { ChatProvider } from '@/domains/chat/ChatProvider'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { ChatPage } from '@/pages/ChatPage'
@@ -18,7 +19,14 @@ export function AppRouter() {
           </Route>
 
           <Route element={<ProtectedRoute />}>
-            <Route path="/chat" element={<ChatPage />} />
+            <Route
+              path="/chat"
+              element={
+                <ChatProvider>
+                  <ChatPage />
+                </ChatProvider>
+              }
+            />
           </Route>
 
           <Route path="*" element={<Navigate to="/chat" replace />} />
