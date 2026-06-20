@@ -9,8 +9,8 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
-    <div className="flex min-h-full items-center justify-center bg-sidebar px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-8 shadow-2xl">
+    <div className="flex min-h-full items-center justify-center bg-sidebar px-4 py-6 safe-area-top safe-area-bottom sm:py-10">
+      <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl sm:p-8">
         <div className="mb-8 flex justify-center">
           <Logo />
         </div>

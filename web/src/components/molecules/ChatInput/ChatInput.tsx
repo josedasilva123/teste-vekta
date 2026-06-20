@@ -56,7 +56,7 @@ export function ChatInput({
           ↑
         </Button>
       </div>
-      <p className="mt-2 text-center text-xs text-muted">
+      <p className="mt-2 hidden text-center text-xs text-muted sm:block">
         Enter envia · Shift+Enter quebra linha
       </p>
     </form>

@@ -42,7 +42,7 @@ export function ChatWindow({
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-            <h1 className="mb-2 text-2xl font-semibold text-white">Como posso ajudar?</h1>
+            <h1 className="mb-2 text-xl font-semibold text-white sm:text-2xl">Como posso ajudar?</h1>
             <p className="max-w-md text-sm text-muted">
               Envie uma mensagem para iniciar a conversa com a IA.
             </p>
@@ -69,7 +69,7 @@ export function ChatWindow({
         )}
       </div>
 
-      <div className="border-t border-border bg-surface px-4 py-4">
+      <div className="border-t border-border bg-surface px-3 py-3 safe-area-bottom sm:px-4 sm:py-4">
         {error ? <p className="mb-2 text-center text-sm text-red-400">{error}</p> : null}
         {!isConnected && !isLoading ? (
           <p className="mb-2 text-center text-sm text-amber-400">Reconectando ao chat...</p>

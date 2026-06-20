@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
+import { ChatLayout } from '@/components/templates/ChatLayout'
 import { ChatSidebar } from '@/components/organisms/ChatSidebar'
 
 const mockNavigate = vi.fn()
@@ -65,11 +66,14 @@ describe('ChatSidebar', () => {
 
     render(
       <MemoryRouter>
-        <ChatSidebar />
+        <ChatLayout sidebar={<ChatSidebar />}>
+          <div />
+        </ChatLayout>
       </MemoryRouter>,
     )
 
     expect(screen.getByText('Maria')).toBeInTheDocument()
+    expect(screen.getByText('M')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Primeira mensagem' })).toBeInTheDocument()
   })
 
@@ -97,7 +101,9 @@ describe('ChatSidebar', () => {
 
     render(
       <MemoryRouter>
-        <ChatSidebar />
+        <ChatLayout sidebar={<ChatSidebar />}>
+          <div />
+        </ChatLayout>
       </MemoryRouter>,
     )
 
