@@ -29,6 +29,6 @@ htmlcov/
 Thumbs.db
 
 # MongoDB local data (se usar mongod --dbpath local)
-data/db/
+api/data/db/
 api/tools/mongodb/
 api/tools/*.zip
