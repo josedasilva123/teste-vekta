@@ -42,4 +42,41 @@ describe('useTypewriter', () => {
     expect(result.current.displayed).toBe('Resposta completa')
     expect(result.current.isTyping).toBe(false)
   })
+
+  it('não apaga o texto ao receber substituição mais curta', async () => {
+    vi.useFakeTimers()
+
+    const { result, rerender } = renderHook(
+      ({ text }) => useTypewriter(text, { enabled: true, intervalMs: 10 }),
+      { initialProps: { text: 'A Terra é plana — resposta longa em streaming' } },
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200)
+    })
+
+    expect(result.current.displayed.length).toBeGreaterThan(0)
+
+    rerender({ text: 'Resposta corrigida e mais curta.' })
+
+    expect(result.current.displayed).toBe('Resposta corrigida e mais curta.')
+    expect(result.current.displayed).not.toBe('')
+  })
+
+  it('exibe imediatamente texto substituído que não é extensão do anterior', async () => {
+    vi.useFakeTimers()
+
+    const { result, rerender } = renderHook(
+      ({ text }) => useTypewriter(text, { enabled: true, intervalMs: 10 }),
+      { initialProps: { text: 'Texto original sendo digitado aos poucos' } },
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100)
+    })
+
+    rerender({ text: 'Texto totalmente diferente após guard.' })
+
+    expect(result.current.displayed).toBe('Texto totalmente diferente após guard.')
+  })
 })

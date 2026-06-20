@@ -13,19 +13,29 @@ export function useTypewriter(
   const [displayed, setDisplayed] = useState(enabled ? '' : text)
   const indexRef = useRef(enabled ? 0 : text.length)
   const completedLengthRef = useRef(enabled ? 0 : text.length)
+  const previousTextRef = useRef(text)
 
   useEffect(() => {
     if (!enabled) {
       indexRef.current = text.length
       completedLengthRef.current = text.length
       setDisplayed(text)
+      previousTextRef.current = text
       return
     }
 
-    if (text.length < indexRef.current) {
-      indexRef.current = 0
-      completedLengthRef.current = 0
-      setDisplayed('')
+    const previousText = previousTextRef.current
+    previousTextRef.current = text
+
+    const isAppend = previousText === '' || text.startsWith(previousText)
+
+    if (!isAppend) {
+      // Substituição (ex.: evento replace) — exibe o texto corrigido sem apagar o conteúdo.
+      indexRef.current = text.length
+      setDisplayed(text)
+    } else if (text.length < indexRef.current) {
+      indexRef.current = text.length
+      setDisplayed(text)
     }
 
     let active = true
@@ -49,7 +59,9 @@ export function useTypewriter(
       }
     }
 
-    handle = setTimeout(step, intervalMs)
+    if (indexRef.current < text.length) {
+      handle = setTimeout(step, intervalMs)
+    }
 
     return () => {
       active = false

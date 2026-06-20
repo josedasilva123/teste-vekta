@@ -1,18 +1,17 @@
 import { ChatWindow } from '@/components/organisms/ChatWindow'
-import { useChat } from '@/domains/chat/ChatProvider'
+import { useChatConversations, useChatMessages } from '@/domains/chat/chat-context'
 
 export function ChatMain() {
+  const { pageError, isLoadingConversations } = useChatConversations()
   const {
     messages,
-    pageError,
     chatError,
-    isLoadingConversations,
     isLoadingMessages,
     isConnected,
     isSending,
     sendMessage,
     finalizeStreamingMessage,
-  } = useChat()
+  } = useChatMessages()
 
   return (
     <>

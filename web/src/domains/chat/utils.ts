@@ -1,4 +1,4 @@
-import type { ChatMessage, Conversation } from '@/domains/chat/types'
+import type { ChatMessage, Conversation, Message } from '@/domains/chat/types'
 
 export function conversationTitle(conversation: Conversation): string {
   const firstUserMessage = conversation.messages.find((message) => message.sender === 'USER')
@@ -14,4 +14,15 @@ export function mapMessages(messages: Conversation['messages']): ChatMessage[] {
     sender: message.sender,
     content: message.content,
   }))
+}
+
+export function withFirstUserMessage(conversation: Conversation, message: Message): Conversation {
+  if (conversation.messages.some((entry) => entry.sender === 'USER')) {
+    return conversation
+  }
+
+  return {
+    ...conversation,
+    messages: [...conversation.messages, message],
+  }
 }

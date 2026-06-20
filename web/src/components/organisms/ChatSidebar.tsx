@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { ConversationItem } from '@/components/molecules/ConversationItem'
 import { Sidebar } from '@/components/organisms/Sidebar'
 import { useAuth } from '@/domains/auth/AuthProvider'
-import { useChat } from '@/domains/chat/ChatProvider'
+import { useChatConversations } from '@/domains/chat/chat-context'
 import { conversationTitle } from '@/domains/chat/utils'
 
 export function ChatSidebar() {
@@ -14,7 +14,7 @@ export function ChatSidebar() {
     isLoadingConversations,
     selectConversation,
     createNewChat,
-  } = useChat()
+  } = useChatConversations()
 
   const handleLogout = () => {
     logout()
