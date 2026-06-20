@@ -1,13 +1,25 @@
 import type { SenderRole } from '@/domains/chat/types'
+import { TypewriterText } from '@/components/atoms/TypewriterText'
 
 type ChatMessageProps = {
   sender: SenderRole
   content: string
   streaming?: boolean
+  finalizeOnComplete?: boolean
+  onTypingComplete?: () => void
+  onTypingProgress?: () => void
 }
 
-export function ChatMessage({ sender, content, streaming = false }: ChatMessageProps) {
+export function ChatMessage({
+  sender,
+  content,
+  streaming = false,
+  finalizeOnComplete = false,
+  onTypingComplete,
+  onTypingProgress,
+}: ChatMessageProps) {
   const isUser = sender === 'USER'
+  const animateAi = !isUser && streaming
 
   return (
     <div className={`flex gap-4 px-4 py-6 ${isUser ? 'bg-transparent' : 'bg-[#2a2a2a]/40'}`}>
@@ -20,8 +32,17 @@ export function ChatMessage({ sender, content, streaming = false }: ChatMessageP
       </div>
       <div className="min-w-0 flex-1 pt-0.5">
         <p className="whitespace-pre-wrap text-[15px] leading-7 text-[#ececec]">
-          {content}
-          {streaming ? <span className="ml-1 inline-block animate-pulse text-muted">▍</span> : null}
+          {animateAi ? (
+            <TypewriterText
+              text={content}
+              active
+              showCursor
+              onComplete={finalizeOnComplete ? onTypingComplete : undefined}
+              onProgress={onTypingProgress}
+            />
+          ) : (
+            content
+          )}
         </p>
       </div>
     </div>

@@ -67,6 +67,7 @@ export function ChatPage() {
     error: chatError,
     sendMessage,
     setMessages,
+    finalizeStreamingMessage,
   } = useChatWebSocket({
     conversationId: activeConversationId,
     token,
@@ -138,6 +139,7 @@ export function ChatPage() {
         isConnected={Boolean(activeConversationId && isConnected)}
         isLoading={isLoadingConversations || isLoadingMessages}
         error={chatError}
+        onStreamingTypingComplete={finalizeStreamingMessage}
       />
     </ChatLayout>
   )

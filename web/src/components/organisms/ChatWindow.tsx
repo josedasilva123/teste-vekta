@@ -11,6 +11,7 @@ type ChatWindowProps = {
   isConnected: boolean
   isLoading: boolean
   error?: string | null
+  onStreamingTypingComplete?: () => void
 }
 
 export function ChatWindow({
@@ -20,11 +21,16 @@ export function ChatWindow({
   isConnected,
   isLoading,
   error,
+  onStreamingTypingComplete,
 }: ChatWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
   }, [messages])
 
   return (
@@ -49,6 +55,13 @@ export function ChatWindow({
                 sender={message.sender}
                 content={message.content}
                 streaming={message.streaming}
+                finalizeOnComplete={message.finalizeOnComplete}
+                onTypingComplete={
+                  message.streaming && message.finalizeOnComplete
+                    ? onStreamingTypingComplete
+                    : undefined
+                }
+                onTypingProgress={message.streaming ? scrollToBottom : undefined}
               />
             ))}
             <div ref={bottomRef} />

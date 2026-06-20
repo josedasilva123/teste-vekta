@@ -17,6 +17,7 @@ type UseChatWebSocketResult = {
   error: string | null
   sendMessage: (content: string) => void
   setMessages: (messages: ChatMessage[]) => void
+  finalizeStreamingMessage: () => void
 }
 
 function closeWebSocket(ws: WebSocket): void {
@@ -41,8 +42,10 @@ export function useChatWebSocket({
   const [isConnected, setIsConnected] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [awaitingFinalize, setAwaitingFinalize] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const streamingIdRef = useRef<string>('streaming-ai')
+  const pendingFinalMessageRef = useRef<ChatMessage | null>(null)
   const onConversationUpdatedRef = useRef(onConversationUpdated)
 
   onConversationUpdatedRef.current = onConversationUpdated
@@ -100,15 +103,13 @@ export function useChatWebSocket({
       }
 
       if (data.type === 'done') {
-        setMessages((current) => [
-          ...current,
-          {
-            id: data.ai_message.id,
-            sender: data.ai_message.sender,
-            content: data.ai_message.content,
-          },
-        ])
-        setStreamingText('')
+        pendingFinalMessageRef.current = {
+          id: data.ai_message.id,
+          sender: data.ai_message.sender,
+          content: data.ai_message.content,
+        }
+        setStreamingText(data.ai_message.content)
+        setAwaitingFinalize(true)
         setIsSending(false)
         onConversationUpdatedRef.current?.()
         return
@@ -128,6 +129,16 @@ export function useChatWebSocket({
       }
     }
   }, [conversationId, token, enabled])
+
+  const finalizeStreamingMessage = useCallback(() => {
+    const pending = pendingFinalMessageRef.current
+    if (!pending) return
+
+    setMessages((current) => [...current, pending])
+    pendingFinalMessageRef.current = null
+    setStreamingText('')
+    setAwaitingFinalize(false)
+  }, [])
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -151,6 +162,7 @@ export function useChatWebSocket({
           sender: 'AI' as const,
           content: streamingText,
           streaming: true,
+          finalizeOnComplete: awaitingFinalize,
         },
       ]
     : messages
@@ -163,5 +175,6 @@ export function useChatWebSocket({
     error,
     sendMessage,
     setMessages,
+    finalizeStreamingMessage,
   }
 }
