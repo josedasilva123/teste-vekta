@@ -11,7 +11,7 @@
 |--------|--------|---------|
 | `UseCase` | application | `SendMessageUseCase` |
 | `Repository` | infrastructure | `MongoConversationRepository` |
-| `Service` | infrastructure | `OpenAIService`, `FakeAIService` |
+| `Service` | infrastructure | `GeminiService`, `FakeAIService` |
 | `Schema` | presentation | `MessageSchema`, `ConversationSchema` |
 
 ## Enums

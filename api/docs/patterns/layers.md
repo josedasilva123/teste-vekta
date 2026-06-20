@@ -28,7 +28,7 @@ FastAPI `Depends()` em `presentation/dependencies.py` monta o grafo:
 
 ```
 Settings → MongoDatabase → MongoConversationRepository → UseCase
-Settings → OpenAIService | FakeAIService → SendMessageUseCase
+Settings → GeminiService | FakeAIService → SendMessageUseCase
 ```
 
 Use cases recebem **interfaces** (Protocol), não implementações concretas.

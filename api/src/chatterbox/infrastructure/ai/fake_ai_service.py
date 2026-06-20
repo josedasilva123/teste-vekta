@@ -2,7 +2,7 @@ from chatterbox.domain.entities.message import Message
 
 
 class FakeAIService:
-    """Implementação local para desenvolvimento e testes sem chave OpenAI."""
+    """Implementação local para desenvolvimento e testes sem chave Gemini."""
 
     async def generate_reply(self, history: list[Message]) -> str:
         last_user_message = next(

@@ -2,6 +2,8 @@
 
 PoC de REST API para conversas com IA (Python + FastAPI + MongoDB).
 
+> Comandos abaixo assumem que você está na pasta `api/` (`cd api`).
+
 ## Pré-requisitos
 
 - Python 3.11+
@@ -14,7 +16,6 @@ Recomendado quando não há espaço ou Docker disponível.
 
 ```powershell
 # 1. Instalar dependências Python + preparar ambiente
-cd api
 .\scripts\setup-local.ps1
 
 # 2. Iniciar MongoDB local (em outro terminal)
@@ -36,7 +37,7 @@ A API estará em `http://localhost:8000` — documentação interativa em `/docs
 
 ### Variáveis de ambiente
 
-Copie `.env.example` para `.env`. Para desenvolvimento sem chave OpenAI:
+Copie `.env.example` para `.env`. Para desenvolvimento sem chave Gemini:
 
 ```env
 AI_PROVIDER=fake
@@ -81,7 +82,7 @@ poetry run pytest tests/integration   # API com mongomock
 src/chatterbox/
 ├── domain/          # Entidades, enums, ports (interfaces)
 ├── application/     # Casos de uso
-├── infrastructure/  # MongoDB, OpenAI, config
+├── infrastructure/  # MongoDB, Gemini, config
 └── presentation/    # FastAPI (routers, schemas)
 ```
 

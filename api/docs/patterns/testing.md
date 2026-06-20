@@ -42,4 +42,4 @@ poetry run pytest -k send_message    # filtro por nome
 
 1. Novo use case → teste unitário com fakes
 2. Novo endpoint → teste de integração com mongomock
-3. Evite depender de MongoDB real ou OpenAI nos testes automatizados
+3. Evite depender de MongoDB real ou Gemini nos testes automatizados

@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     api_port: int = 8000
     api_reload: bool = True
 
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
-    ai_provider: str = "openai"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash-lite"
+    ai_provider: str = "gemini"
 
 
 settings = Settings()

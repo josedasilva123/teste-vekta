@@ -20,8 +20,8 @@ poetry install
 Write-Host "==> Criando .env a partir de .env.example (se nao existir)..." -ForegroundColor Cyan
 if (-not (Test-Path ".env")) {
     Copy-Item ".env.example" ".env"
-    (Get-Content ".env") -replace "AI_PROVIDER=openai", "AI_PROVIDER=fake" | Set-Content ".env"
-    Write-Host "    .env criado com AI_PROVIDER=fake (sem necessidade de OpenAI)." -ForegroundColor Yellow
+    (Get-Content ".env") -replace "AI_PROVIDER=gemini", "AI_PROVIDER=fake" | Set-Content ".env"
+    Write-Host "    .env criado com AI_PROVIDER=fake (sem necessidade de Gemini)." -ForegroundColor Yellow
 }
 
 Write-Host "==> Criando diretorio de dados do MongoDB..." -ForegroundColor Cyan

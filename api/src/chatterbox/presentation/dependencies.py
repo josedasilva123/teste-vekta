@@ -8,7 +8,7 @@ from chatterbox.application.use_cases.start_conversation import StartConversatio
 from chatterbox.domain.ports.ai_service import AIService
 from chatterbox.domain.ports.conversation_repository import ConversationRepository
 from chatterbox.infrastructure.ai.fake_ai_service import FakeAIService
-from chatterbox.infrastructure.ai.openai_service import OpenAIService
+from chatterbox.infrastructure.ai.gemini_service import GeminiService
 from chatterbox.infrastructure.config.settings import Settings, settings
 from chatterbox.infrastructure.persistence.mongo_conversation_repository import (
     MongoConversationRepository,
@@ -38,7 +38,7 @@ def get_ai_service(
 ) -> AIService:
     if app_settings.ai_provider.lower() == "fake":
         return FakeAIService()
-    return OpenAIService(app_settings)
+    return GeminiService(app_settings)
 
 
 def get_start_conversation_use_case(

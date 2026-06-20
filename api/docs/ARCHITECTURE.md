@@ -12,7 +12,7 @@ A API segue **Clean Architecture** com quatro camadas. A regra central: dependê
 ├─────────────────────────────────────────┤
 │           domain (entities + ports)      │
 ├─────────────────────────────────────────┤
-│     infrastructure (MongoDB, OpenAI)     │
+│     infrastructure (MongoDB, Gemini)     │
 └─────────────────────────────────────────┘
 ```
 
@@ -22,7 +22,7 @@ A API segue **Clean Architecture** com quatro camadas. A regra central: dependê
 |--------|------------------|----------|
 | **domain** | Regras e contratos puros | `Conversation`, `Message`, `ConversationRepository` (Protocol) |
 | **application** | Orquestração de casos de uso | `SendMessageUseCase`, `StartConversationUseCase` |
-| **infrastructure** | Implementações concretas | `MongoConversationRepository`, `OpenAIService` |
+| **infrastructure** | Implementações concretas | `MongoConversationRepository`, `GeminiService` |
 | **presentation** | HTTP, DTOs, DI | Routers, schemas Pydantic, `dependencies.py` |
 
 ## Fluxo: enviar mensagem
