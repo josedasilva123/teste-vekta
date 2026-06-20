@@ -23,5 +23,9 @@ class Settings(BaseSettings):
     ai_max_history_turns: int = 10
     ai_provider: str = "gemini"
 
+    jwt_secret_key: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 1440
+
 
 settings = Settings()

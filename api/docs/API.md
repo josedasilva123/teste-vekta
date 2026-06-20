@@ -1,6 +1,64 @@
-# API — REST e WebSocket
+# API — Autenticação, REST e WebSocket
 
-A API oferece **duas alternativas** para enviar mensagens e receber respostas da IA. Ambas usam a mesma lógica de negócio, guards de prompt injection e persistência no MongoDB.
+Todas as conversas pertencem a um **usuário autenticado**. Cadastro e login geram JWT; rotas de conversa exigem `Authorization: Bearer <token>`.
+
+A API oferece **duas alternativas** para enviar mensagens e receber respostas da IA. Ambas compartilham guards de prompt injection e persistência no MongoDB.
+
+## Fluxo recomendado
+
+1. `POST /api/v1/auth/register` ou `POST /api/v1/auth/login` — obtém token JWT
+2. `POST /api/v1/conversations` — cria conversa (com Bearer token)
+3. Enviar mensagem via **REST** ou **WebSocket**
+4. `GET /api/v1/conversations` — lista conversas do usuário
+5. `GET /api/v1/conversations/{id}` — recupera histórico
+
+---
+
+## Autenticação
+
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `POST` | `/api/v1/auth/register` | Não | Cadastro de usuário |
+| `POST` | `/api/v1/auth/login` | Não | Login |
+| `GET` | `/api/v1/auth/me` | Sim | Usuário autenticado |
+
+### Cadastro
+
+```http
+POST /api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "senha12345",
+  "name": "Maria"
+}
+```
+
+```json
+{
+  "access_token": "eyJ...",
+  "token_type": "bearer",
+  "user": {
+    "id": "...",
+    "email": "user@example.com",
+    "name": "Maria",
+    "created_at": "..."
+  }
+}
+```
+
+### Uso do token
+
+Inclua em todas as rotas de conversa:
+
+```http
+Authorization: Bearer eyJ...
+```
+
+---
+
+## REST vs WebSocket (mensagens)
 
 ## Quando usar cada uma
 
@@ -12,33 +70,38 @@ A API oferece **duas alternativas** para enviar mensagens e receber respostas da
 | **Complexidade no front** | Baixa (`fetch`) | Média (`WebSocket`) |
 | **Requisito do case** | Mínimo (a–d) | Opcional (e) |
 
-> **Recomendação:** use REST para criar/obter conversas e testes; use WebSocket no React para exibir a digitação da IA em tempo real.
+> **Recomendação:** autentique-se via REST; use WebSocket no React para streaming da IA.
 
 ---
 
-## Fluxo comum
+## Quando usar REST ou WebSocket
 
-1. `POST /api/v1/conversations` — cria conversa (REST)
-2. Enviar mensagem via **REST** ou **WebSocket**
-3. `GET /api/v1/conversations/{id}` — recupera histórico (REST)
+| | **REST** | **WebSocket** |
+|---|----------|---------------|
+| **Uso ideal** | Integrações simples, testes, clientes HTTP | Frontend com chat ao vivo (streaming) |
+| **Transporte** | HTTP request/response | Conexão persistente bidirecional |
+| **Resposta da IA** | Completa de uma vez | Token a token (chunks) em tempo real |
+| **Auth** | Header `Authorization: Bearer` | Query `?token=` na conexão |
 
 ---
 
-## REST
+## REST — Conversas
 
 ### Endpoints
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/health` | Health check |
-| `POST` | `/api/v1/conversations` | Inicia conversa |
-| `GET` | `/api/v1/conversations/{id}` | Obtém conversa e mensagens |
-| `POST` | `/api/v1/conversations/{id}/messages` | Envia mensagem; IA responde (resposta completa) |
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `GET` | `/health` | Não | Health check |
+| `GET` | `/api/v1/conversations` | Sim | Lista conversas do usuário |
+| `POST` | `/api/v1/conversations` | Sim | Inicia conversa |
+| `GET` | `/api/v1/conversations/{id}` | Sim | Obtém conversa e mensagens |
+| `POST` | `/api/v1/conversations/{id}/messages` | Sim | Envia mensagem (resposta completa) |
 
 ### Exemplo
 
 ```http
 POST /api/v1/conversations/{id}/messages
+Authorization: Bearer eyJ...
 Content-Type: application/json
 
 {"content": "Por que a Terra é plana?"}
@@ -58,10 +121,10 @@ Content-Type: application/json
 ### Conexão
 
 ```
-ws://localhost:8000/api/v1/conversations/{conversation_id}/ws
+ws://localhost:8000/api/v1/conversations/{conversation_id}/ws?token=eyJ...
 ```
 
-A conversa deve existir (criada via REST). A conexão permanece aberta para múltiplas mensagens.
+A conversa deve existir e pertencer ao usuário do token. A conexão permanece aberta para múltiplas mensagens.
 
 ### Cliente → servidor
 
@@ -94,7 +157,10 @@ A conversa deve existir (criada via REST). A conexão permanece aberta para múl
 ### Exemplo (JavaScript)
 
 ```javascript
-const ws = new WebSocket(`ws://localhost:8000/api/v1/conversations/${id}/ws`);
+const token = "..."; // obtido em /auth/login ou /auth/register
+const ws = new WebSocket(
+  `ws://localhost:8000/api/v1/conversations/${id}/ws?token=${token}`
+);
 let aiText = "";
 
 ws.onmessage = (event) => {

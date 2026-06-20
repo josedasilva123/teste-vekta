@@ -65,10 +65,14 @@ Documentação completa (REST **e** WebSocket como alternativas): [`docs/API.md`
 
 | Modo | Rota | Descrição |
 |------|------|-----------|
+| REST | `POST /api/v1/auth/register` | Cadastro |
+| REST | `POST /api/v1/auth/login` | Login |
+| REST | `GET /api/v1/auth/me` | Perfil autenticado |
+| REST | `GET /api/v1/conversations` | Lista conversas do usuário |
 | REST | `POST /api/v1/conversations` | Inicia conversa |
 | REST | `GET /api/v1/conversations/{id}` | Obtém conversa e mensagens |
 | REST | `POST /api/v1/conversations/{id}/messages` | Envia mensagem; resposta completa |
-| **WS** | `WS /api/v1/conversations/{id}/ws` | Envia mensagem; resposta em streaming |
+| **WS** | `WS /api/v1/conversations/{id}/ws?token=` | Streaming (requer JWT na query) |
 | REST | `GET /health` | Health check |
 
 ## Testes

@@ -5,7 +5,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from chatterbox.infrastructure.config.settings import settings
+from chatterbox.infrastructure.persistence.mongo_conversation_repository import (
+    MongoConversationRepository,
+)
 from chatterbox.infrastructure.persistence.mongo_database import MongoDatabase
+from chatterbox.infrastructure.persistence.mongo_user_repository import MongoUserRepository
+from chatterbox.presentation.api.routers.auth import router as auth_router
 from chatterbox.presentation.api.routers.conversations import router as conversations_router
 from chatterbox.presentation.api.routers.conversations_ws import router as conversations_ws_router
 
@@ -14,6 +19,8 @@ from chatterbox.presentation.api.routers.conversations_ws import router as conve
 async def lifespan(app: FastAPI):
     mongo_database = MongoDatabase(settings)
     await mongo_database.connect()
+    await MongoUserRepository(mongo_database).ensure_indexes()
+    await MongoConversationRepository(mongo_database).ensure_indexes()
     app.state.mongo_database = mongo_database
     yield
     await mongo_database.disconnect()
@@ -37,6 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(conversations_router, prefix="/api/v1")
 app.include_router(conversations_ws_router, prefix="/api/v1")
 

@@ -18,6 +18,7 @@ def test_settings() -> Settings:
         mongodb_database="chatterbox_test",
         ai_provider="fake",
         api_reload=False,
+        jwt_secret_key="test-secret-key",
     )
 
 

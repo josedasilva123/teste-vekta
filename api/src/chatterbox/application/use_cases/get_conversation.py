@@ -7,8 +7,8 @@ class GetConversationUseCase:
     def __init__(self, conversation_repository: ConversationRepository) -> None:
         self._conversation_repository = conversation_repository
 
-    async def execute(self, conversation_id: str) -> Conversation:
-        conversation = await self._conversation_repository.get_by_id(conversation_id)
+    async def execute(self, conversation_id: str, user_id: str) -> Conversation:
+        conversation = await self._conversation_repository.get_by_id(conversation_id, user_id)
         if conversation is None:
             raise ConversationNotFoundError(f"Conversa {conversation_id} não encontrada")
         return conversation

@@ -13,19 +13,23 @@ class MongoConversationRepository:
     def __init__(self, database: MongoDatabase) -> None:
         self._database = database
 
-    async def create(self) -> Conversation:
-        conversation = Conversation()
+    async def ensure_indexes(self) -> None:
+        await self._database.database[self.CONVERSATIONS].create_index("user_id")
+
+    async def create(self, user_id: str) -> Conversation:
+        conversation = Conversation(user_id=user_id)
         await self._database.database[self.CONVERSATIONS].insert_one(
             {
                 "_id": conversation.id,
+                "user_id": conversation.user_id,
                 "created_at": conversation.created_at,
             }
         )
         return conversation
 
-    async def get_by_id(self, conversation_id: str) -> Conversation | None:
+    async def get_by_id(self, conversation_id: str, user_id: str) -> Conversation | None:
         doc = await self._database.database[self.CONVERSATIONS].find_one(
-            {"_id": conversation_id}
+            {"_id": conversation_id, "user_id": user_id}
         )
         if doc is None:
             return None
@@ -38,9 +42,22 @@ class MongoConversationRepository:
 
         return Conversation(
             id=doc["_id"],
+            user_id=doc["user_id"],
             messages=messages,
             created_at=doc["created_at"],
         )
+
+    async def list_by_user(self, user_id: str) -> list[Conversation]:
+        cursor = self._database.database[self.CONVERSATIONS].find({"user_id": user_id}).sort(
+            "created_at", -1
+        )
+
+        conversations: list[Conversation] = []
+        async for doc in cursor:
+            conversation = await self.get_by_id(doc["_id"], user_id)
+            if conversation is not None:
+                conversations.append(conversation)
+        return conversations
 
     async def add_message(self, message: Message) -> Message:
         await self._database.database[self.MESSAGES].insert_one(

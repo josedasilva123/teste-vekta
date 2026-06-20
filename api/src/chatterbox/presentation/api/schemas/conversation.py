@@ -15,6 +15,7 @@ class MessageSchema(BaseModel):
 
 class ConversationSchema(BaseModel):
     id: str
+    user_id: str
     messages: list[MessageSchema]
     created_at: datetime
 

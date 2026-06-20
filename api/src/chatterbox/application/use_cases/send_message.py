@@ -23,8 +23,13 @@ class SendMessageUseCase:
         self._conversation_repository = conversation_repository
         self._ai_service = ai_service
 
-    async def execute(self, conversation_id: str, content: str) -> SendMessageResult:
-        conversation = await self._conversation_repository.get_by_id(conversation_id)
+    async def execute(
+        self,
+        conversation_id: str,
+        user_id: str,
+        content: str,
+    ) -> SendMessageResult:
+        conversation = await self._conversation_repository.get_by_id(conversation_id, user_id)
         if conversation is None:
             raise ConversationNotFoundError(f"Conversa {conversation_id} não encontrada")
 
