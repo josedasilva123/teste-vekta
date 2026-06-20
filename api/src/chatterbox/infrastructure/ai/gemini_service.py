@@ -6,7 +6,6 @@ from chatterbox.domain.enums.sender_role import SenderRole
 from chatterbox.domain.policies.prompt_injection_guard import (
     InjectionRisk,
     assess_injection_risk,
-    build_safe_user_content,
     get_injection_fallback_response,
 )
 from chatterbox.domain.policies.response_guard import (
@@ -14,6 +13,7 @@ from chatterbox.domain.policies.response_guard import (
     assess_response,
     get_response_fallback,
 )
+from chatterbox.infrastructure.ai.conversation_context import build_model_contents
 from chatterbox.infrastructure.ai.prompts import FLAT_EARTH_SYSTEM_PROMPT, RETRY_SYSTEM_APPENDIX
 from chatterbox.infrastructure.config.settings import Settings
 
@@ -22,13 +22,14 @@ class GeminiService:
     def __init__(self, settings: Settings) -> None:
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._model = settings.gemini_model
+        self._settings = settings
 
     async def generate_reply(self, history: list[Message]) -> str:
         latest_user_message = _latest_user_message(history)
         if latest_user_message and assess_injection_risk(latest_user_message) == InjectionRisk.HIGH:
             return get_injection_fallback_response(latest_user_message)
 
-        contents = _build_contents(history)
+        contents = build_model_contents(history, self._settings.ai_max_history_turns)
         response_text = await self._generate(contents, FLAT_EARTH_SYSTEM_PROMPT)
         violation = assess_response(response_text)
 
@@ -53,7 +54,9 @@ class GeminiService:
             contents=contents,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
-                temperature=0.7,
+                temperature=self._settings.gemini_temperature,
+                top_p=self._settings.gemini_top_p,
+                max_output_tokens=self._settings.gemini_max_output_tokens,
             ),
         )
         return response.text or ""
@@ -64,23 +67,3 @@ def _latest_user_message(history: list[Message]) -> str:
         if item.sender == SenderRole.USER:
             return item.content
     return ""
-
-
-def _build_contents(history: list[Message]) -> list[types.Content]:
-    contents: list[types.Content] = []
-
-    for item in history:
-        text = item.content
-        if item.sender == SenderRole.USER:
-            risk = assess_injection_risk(text)
-            if risk != InjectionRisk.HIGH:
-                text = build_safe_user_content(text, risk)
-
-        contents.append(
-            types.Content(
-                role="user" if item.sender == SenderRole.USER else "model",
-                parts=[types.Part.from_text(text=text)],
-            )
-        )
-
-    return contents
