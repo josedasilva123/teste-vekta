@@ -15,22 +15,27 @@ PoC de REST API para conversas com IA (Python + FastAPI + MongoDB).
 Recomendado quando não há espaço ou Docker disponível.
 
 ```powershell
-# 1. Instalar dependências Python + preparar ambiente
+# 1. Instalar dependências Python + MongoDB (Win10: baixa MongoDB 7.0 portable)
 .\scripts\setup-local.ps1
 
-# 2. Iniciar MongoDB local (em outro terminal)
+# 2. Iniciar MongoDB local (em outro terminal — deixe aberto)
 .\scripts\start-mongodb.ps1
 
-# 3. Iniciar a API
-poetry run chatterbox
+# 3. Iniciar a API (em outro terminal)
+python -m poetry run chatterbox
 ```
 
 A API estará em `http://localhost:8000` — documentação interativa em `/docs`.
+
+> **Windows 10:** MongoDB 8.x (instalado via winget) **não roda** no Windows 10. O script `setup-local.ps1` instala automaticamente o MongoDB **7.0 portable** em `tools/mongodb/`. Se ainda não tiver, rode manualmente: `.\scripts\install-mongodb-win10.ps1` (~600 MB).
+
+> **Poetry no PATH:** se `poetry run` falhar com caminho de Python inexistente, use sempre `python -m poetry run ...`.
 
 ### Alternativas ao MongoDB local
 
 | Opção | Quando usar |
 |-------|-------------|
+| **MongoDB 7.0 portable** (`scripts/install-mongodb-win10.ps1`) | Windows 10, sem Docker |
 | **MongoDB local** (`scripts/start-mongodb.ps1`) | Desenvolvimento offline |
 | **MongoDB Atlas** (free tier) | Sem instalar nada; atualize `MONGODB_URI` no `.env` |
 | **mongomock** (automático nos testes) | Apenas `pytest`, sem banco real |
