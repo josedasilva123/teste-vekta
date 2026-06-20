@@ -13,6 +13,7 @@ from chatterbox.application.use_cases.send_message_stream import (
     StreamUserMessageEvent,
 )
 from chatterbox.domain.exceptions import ConversationNotFoundError, InvalidTokenError
+from chatterbox.infrastructure.ai.error_messages import format_ai_error
 from chatterbox.infrastructure.ai.fake_ai_service import FakeAIService
 from chatterbox.infrastructure.ai.gemini_service import GeminiService
 from chatterbox.infrastructure.auth.jwt_token_service import JwtTokenService
@@ -72,10 +73,10 @@ async def conversation_websocket(
                 await _send_event(websocket, {"type": "error", "detail": str(error)})
                 await websocket.close(code=4404)
                 return
-            except Exception:
+            except Exception as error:
                 await _send_event(
                     websocket,
-                    {"type": "error", "detail": "Erro ao processar mensagem. Tente novamente."},
+                    {"type": "error", "detail": format_ai_error(error)},
                 )
     except WebSocketDisconnect:
         return

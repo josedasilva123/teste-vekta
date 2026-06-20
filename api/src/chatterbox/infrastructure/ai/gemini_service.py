@@ -51,16 +51,10 @@ class GeminiService:
         contents = build_model_contents(history, self._settings.ai_max_history_turns)
         accumulated = ""
 
-        stream = await self._generate_content_stream(
-            contents,
-            FLAT_EARTH_SYSTEM_PROMPT,
-        )
-        async for chunk in stream:
-            text = chunk.text or ""
-            if not text:
-                continue
-            accumulated += text
-            yield AIStreamEvent(kind="chunk", content=text)
+        async for event in self._stream_with_fallback(contents, FLAT_EARTH_SYSTEM_PROMPT):
+            if event.kind == "chunk":
+                accumulated += event.content
+            yield event
 
         final_text = await finalize_ai_response(
             latest_user_message,
@@ -102,18 +96,24 @@ class GeminiService:
                     raise
         return ""
 
-    async def _generate_content_stream(
+    async def _stream_with_fallback(
         self,
         contents: list[types.Content],
         system_instruction: str,
-    ):
+    ) -> AsyncIterator[AIStreamEvent]:
         for model in (self._model, self._fallback_model):
             try:
-                return await self._client.aio.models.generate_content_stream(
+                stream = await self._client.aio.models.generate_content_stream(
                     model=model,
                     contents=contents,
                     config=self._generation_config(system_instruction),
                 )
+                async for chunk in stream:
+                    text = chunk.text or ""
+                    if not text:
+                        continue
+                    yield AIStreamEvent(kind="chunk", content=text)
+                return
             except errors.APIError:
                 if model == self._fallback_model:
                     raise

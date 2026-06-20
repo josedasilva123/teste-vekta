@@ -31,7 +31,9 @@ describe('ChatMain', () => {
       isConnected: true,
       isSending: false,
       chatError: null,
+      canRetry: false,
       sendMessage: vi.fn(),
+      retryLastMessage: vi.fn(),
       finalizeStreamingMessage: vi.fn(),
     })
 
@@ -60,7 +62,9 @@ describe('ChatMain', () => {
       isConnected: true,
       isSending: false,
       chatError: null,
+      canRetry: false,
       sendMessage: vi.fn(),
+      retryLastMessage: vi.fn(),
       finalizeStreamingMessage: vi.fn(),
     })
 
