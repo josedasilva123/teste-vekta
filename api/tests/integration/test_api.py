@@ -127,3 +127,39 @@ def test_websocket_invalid_payload_returns_error(ws_client: TestClient) -> None:
         event = json.loads(websocket.receive_text())
 
     assert event["type"] == "error"
+
+
+def test_websocket_ai_failure_keeps_connection_open(ws_client: TestClient, monkeypatch) -> None:
+    class FailingAIService:
+        async def generate_reply_stream(self, history):
+            raise RuntimeError("AI indisponível")
+            yield  # pragma: no cover
+
+    monkeypatch.setattr(
+        "chatterbox.presentation.api.routers.conversations_ws._build_ai_service",
+        lambda: FailingAIService(),
+    )
+
+    register_response = ws_client.post(
+        "/api/v1/auth/register",
+        json={"email": "ws-fail@example.com", "password": "senha12345", "name": "WS User"},
+    )
+    token = register_response.json()["access_token"]
+    headers = auth_headers(token)
+    create_response = ws_client.post("/api/v1/conversations", headers=headers)
+    conversation_id = create_response.json()["id"]
+
+    with ws_client.websocket_connect(
+        f"/api/v1/conversations/{conversation_id}/ws?token={token}"
+    ) as websocket:
+        websocket.send_json({"type": "message", "content": "Teste de falha"})
+
+        user_event = json.loads(websocket.receive_text())
+        assert user_event["type"] == "user_message"
+
+        error_event = json.loads(websocket.receive_text())
+        assert error_event["type"] == "error"
+
+        websocket.send_json({"type": "message", "content": "Segunda tentativa"})
+        second_user_event = json.loads(websocket.receive_text())
+        assert second_user_event["type"] == "user_message"

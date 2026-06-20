@@ -16,7 +16,7 @@ export type ChatMessagesContextValue = {
   isConnected: boolean
   isSending: boolean
   chatError: string | null
-  sendMessage: (content: string) => void
+  sendMessage: (content: string) => boolean
   finalizeStreamingMessage: () => void
 }
 

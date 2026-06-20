@@ -6,7 +6,7 @@ import { ChatInput } from '@/components/molecules/ChatInput'
 describe('ChatInput', () => {
   it('envia mensagem ao submeter o formulário', async () => {
     const user = userEvent.setup()
-    const onSend = vi.fn()
+    const onSend = vi.fn().mockReturnValue(true)
 
     render(<ChatInput onSend={onSend} />)
 
@@ -16,15 +16,26 @@ describe('ChatInput', () => {
     expect(onSend).toHaveBeenCalledWith('Olá!')
   })
 
-  it('limpa o campo após enviar', async () => {
+  it('limpa o campo após enviar com sucesso', async () => {
     const user = userEvent.setup()
-    render(<ChatInput onSend={vi.fn()} />)
+    render(<ChatInput onSend={vi.fn().mockReturnValue(true)} />)
 
     const input = screen.getByPlaceholderText('Envie uma mensagem...')
     await user.type(input, 'Mensagem')
     await user.click(screen.getByRole('button', { name: 'Enviar mensagem' }))
 
     expect(input).toHaveValue('')
+  })
+
+  it('mantém o texto quando o envio falha', async () => {
+    const user = userEvent.setup()
+    render(<ChatInput onSend={vi.fn().mockReturnValue(false)} />)
+
+    const input = screen.getByPlaceholderText('Envie uma mensagem...')
+    await user.type(input, 'Mensagem')
+    await user.click(screen.getByRole('button', { name: 'Enviar mensagem' }))
+
+    expect(input).toHaveValue('Mensagem')
   })
 
   it('não envia mensagem vazia', async () => {
@@ -39,7 +50,7 @@ describe('ChatInput', () => {
 
   it('envia com Enter e não envia com Shift+Enter', async () => {
     const user = userEvent.setup()
-    const onSend = vi.fn()
+    const onSend = vi.fn().mockReturnValue(true)
 
     render(<ChatInput onSend={onSend} />)
 

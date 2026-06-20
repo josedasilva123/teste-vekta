@@ -72,6 +72,11 @@ async def conversation_websocket(
                 await _send_event(websocket, {"type": "error", "detail": str(error)})
                 await websocket.close(code=4404)
                 return
+            except Exception:
+                await _send_event(
+                    websocket,
+                    {"type": "error", "detail": "Erro ao processar mensagem. Tente novamente."},
+                )
     except WebSocketDisconnect:
         return
 

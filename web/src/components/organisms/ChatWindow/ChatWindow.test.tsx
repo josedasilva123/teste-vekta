@@ -47,7 +47,7 @@ describe('ChatWindow', () => {
 
   it('renderiza mensagens e permite envio', async () => {
     const user = userEvent.setup()
-    const onSend = vi.fn()
+    const onSend = vi.fn().mockReturnValue(true)
 
     render(
       <ChatWindow

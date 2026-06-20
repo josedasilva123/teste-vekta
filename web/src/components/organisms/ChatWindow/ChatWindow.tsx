@@ -6,7 +6,7 @@ import type { ChatMessage as ChatMessageType } from '@/domains/chat/types'
 
 type ChatWindowProps = {
   messages: ChatMessageType[]
-  onSend: (content: string) => void
+  onSend: (content: string) => boolean
   isSending: boolean
   isConnected: boolean
   isLoading: boolean

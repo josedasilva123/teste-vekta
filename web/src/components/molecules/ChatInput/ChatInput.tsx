@@ -3,7 +3,7 @@ import { Button } from '@/components/atoms/Button'
 import { TextArea } from '@/components/atoms/TextArea'
 
 type ChatInputProps = {
-  onSend: (content: string) => void
+  onSend: (content: string) => boolean
   disabled?: boolean
   placeholder?: string
 }
@@ -18,8 +18,9 @@ export function ChatInput({
   const submit = () => {
     const trimmed = value.trim()
     if (!trimmed || disabled) return
-    onSend(trimmed)
-    setValue('')
+    if (onSend(trimmed)) {
+      setValue('')
+    }
   }
 
   const handleSubmit = (event: FormEvent) => {

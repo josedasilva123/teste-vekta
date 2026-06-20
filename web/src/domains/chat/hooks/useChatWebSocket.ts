@@ -19,7 +19,7 @@ type UseChatWebSocketResult = {
   isConnected: boolean
   isSending: boolean
   error: string | null
-  sendMessage: (content: string) => void
+  sendMessage: (content: string) => boolean
   setMessages: (messages: ChatMessage[]) => void
   clearMessages: () => void
   finalizeStreamingMessage: () => void
@@ -226,13 +226,19 @@ export function useChatWebSocket({
 
   const sendMessage = useCallback((content: string) => {
     const trimmed = content.trim()
-    if (!trimmed || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      return
+    if (!trimmed) {
+      return false
+    }
+
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      setError('Aguardando conexão com o chat. Tente novamente em instantes.')
+      return false
     }
 
     setError(null)
     setIsSending(true)
     wsRef.current.send(JSON.stringify({ type: 'message', content: trimmed }))
+    return true
   }, [])
 
   const displayMessages = streamingText
