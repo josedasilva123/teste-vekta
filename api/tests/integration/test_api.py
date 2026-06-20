@@ -1,29 +1,8 @@
+import json
+
 import pytest
-from httpx import ASGITransport, AsyncClient
-from mongomock_motor import AsyncMongoMockClient
-
-from chatterbox.infrastructure.config.settings import Settings
-from chatterbox.infrastructure.persistence.mongo_database import MongoDatabase
-from chatterbox.presentation.main import app
-
-
-@pytest.fixture
-async def client():
-    test_settings = Settings(
-        mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="chatterbox_test",
-        ai_provider="fake",
-        api_reload=False,
-    )
-    mongo_database = MongoDatabase(test_settings)
-    mongo_database._client = AsyncMongoMockClient()
-    app.state.mongo_database = mongo_database
-
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as http_client:
-        yield http_client
-
-    await mongo_database.disconnect()
+from httpx import AsyncClient
+from starlette.testclient import TestClient
 
 
 @pytest.mark.asyncio
@@ -68,3 +47,38 @@ async def test_conversation_flow(client: AsyncClient) -> None:
     get_response = await client.get(f"/api/v1/conversations/{conversation_id}")
     assert get_response.status_code == 200
     assert len(get_response.json()["messages"]) == 2
+
+
+def test_websocket_stream_flow(ws_client: TestClient) -> None:
+    create_response = ws_client.post("/api/v1/conversations")
+    conversation_id = create_response.json()["id"]
+
+    with ws_client.websocket_connect(f"/api/v1/conversations/{conversation_id}/ws") as websocket:
+        websocket.send_json({"type": "message", "content": "Por que a Terra é plana?"})
+
+        events = []
+        while True:
+            event = json.loads(websocket.receive_text())
+            events.append(event)
+            if event["type"] == "done":
+                break
+
+    event_types = [event["type"] for event in events]
+    assert event_types[0] == "user_message"
+    assert "chunk" in event_types
+    assert event_types[-1] == "done"
+    assert "Terra" in events[-1]["ai_message"]["content"]
+
+    get_response = ws_client.get(f"/api/v1/conversations/{conversation_id}")
+    assert len(get_response.json()["messages"]) == 2
+
+
+def test_websocket_invalid_payload_returns_error(ws_client: TestClient) -> None:
+    create_response = ws_client.post("/api/v1/conversations")
+    conversation_id = create_response.json()["id"]
+
+    with ws_client.websocket_connect(f"/api/v1/conversations/{conversation_id}/ws") as websocket:
+        websocket.send_json({"type": "invalid", "content": "teste"})
+        event = json.loads(websocket.receive_text())
+
+    assert event["type"] == "error"

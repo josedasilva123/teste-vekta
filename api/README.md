@@ -61,12 +61,15 @@ docker compose --profile full up --build
 
 ## Endpoints
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/health` | Health check |
-| `POST` | `/api/v1/conversations` | Inicia conversa |
-| `GET` | `/api/v1/conversations/{id}` | Obtém conversa e mensagens |
-| `POST` | `/api/v1/conversations/{id}/messages` | Envia mensagem; IA responde |
+Documentação completa (REST **e** WebSocket como alternativas): [`docs/API.md`](docs/API.md).
+
+| Modo | Rota | Descrição |
+|------|------|-----------|
+| REST | `POST /api/v1/conversations` | Inicia conversa |
+| REST | `GET /api/v1/conversations/{id}` | Obtém conversa e mensagens |
+| REST | `POST /api/v1/conversations/{id}/messages` | Envia mensagem; resposta completa |
+| **WS** | `WS /api/v1/conversations/{id}/ws` | Envia mensagem; resposta em streaming |
+| REST | `GET /health` | Health check |
 
 ## Testes
 
@@ -86,7 +89,7 @@ src/chatterbox/
 └── presentation/    # FastAPI (routers, schemas)
 ```
 
-Documentação detalhada em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Documentação detalhada em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) e [`docs/API.md`](docs/API.md).
 
 ## Scripts Poetry
 

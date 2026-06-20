@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from chatterbox.infrastructure.config.settings import settings
 from chatterbox.infrastructure.persistence.mongo_database import MongoDatabase
 from chatterbox.presentation.api.routers.conversations import router as conversations_router
+from chatterbox.presentation.api.routers.conversations_ws import router as conversations_ws_router
 
 
 @asynccontextmanager
@@ -20,7 +21,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="ChatterBox API",
-    description="API REST para conversas com IA — ChatterBox 2.0 PoC",
+    description=(
+        "API para conversas com IA — ChatterBox 2.0 PoC. "
+        "Oferece REST (resposta completa) e WebSocket (streaming em tempo real) como alternativas."
+    ),
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -34,6 +38,7 @@ app.add_middleware(
 )
 
 app.include_router(conversations_router, prefix="/api/v1")
+app.include_router(conversations_ws_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["health"])

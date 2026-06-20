@@ -9,7 +9,7 @@ Defesa em camadas para manter persona, idioma e sigilo das instruções.
 | System prompt | `infrastructure/ai/prompts.py` | Regras invioláveis (pt-BR, Terra plana, anti-vazamento) |
 | Entrada | `domain/policies/prompt_injection_guard.py` | Detecta tentativas de manipulação e encapsula mensagens |
 | Saída | `domain/policies/response_guard.py` | Bloqueia vazamento de prompt, quebra de persona e idioma errado |
-| Orquestração | `infrastructure/ai/gemini_service.py` | Fallback, retry e delimitação de mensagens |
+| Orquestração | `infrastructure/ai/gemini_service.py` | REST síncrono e streaming via WebSocket |
 
 ## Cenários cobertos
 
