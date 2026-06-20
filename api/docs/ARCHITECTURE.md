@@ -40,6 +40,7 @@ A API segue **Clean Architecture** com quatro camadas. A regra central: dependê
 - **Motor** — driver async oficial do MongoDB
 - **Poetry** — lockfile reproduzível
 - **FakeAIService** — desenvolvimento e testes sem API externa
+- **Prompt guards** — defesa em camadas contra injection (ver `docs/patterns/prompt-injection.md`)
 - **mongomock-motor** — testes de integração sem banco real
 
 Ver também: [`docs/patterns/`](patterns/).
