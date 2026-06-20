@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ChatMessage } from '@/components/molecules/ChatMessage'
 import { ChatInput } from '@/components/molecules/ChatInput'
+import { Button } from '@/components/atoms/Button'
 import { Spinner } from '@/components/atoms/Spinner'
 import type { ChatMessage as ChatMessageType } from '@/domains/chat/types'
 
@@ -11,6 +12,8 @@ type ChatWindowProps = {
   isConnected: boolean
   isLoading: boolean
   error?: string | null
+  canRetry?: boolean
+  onRetry?: () => void
   onStreamingTypingComplete?: () => void
 }
 
@@ -21,6 +24,8 @@ export function ChatWindow({
   isConnected,
   isLoading,
   error,
+  canRetry = false,
+  onRetry,
   onStreamingTypingComplete,
 }: ChatWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -70,7 +75,22 @@ export function ChatWindow({
       </div>
 
       <div className="border-t border-border bg-surface px-3 py-3 safe-area-bottom sm:px-4 sm:py-4">
-        {error ? <p className="mb-2 text-center text-sm text-red-400">{error}</p> : null}
+        {error ? (
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-2 text-sm text-red-400">
+            <span>{error}</span>
+            {canRetry && onRetry ? (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onRetry}
+                disabled={isSending || !isConnected}
+                className="h-8 px-3 text-red-300 hover:text-white"
+              >
+                Tentar novamente
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
         {!isConnected && !isLoading ? (
           <p className="mb-2 text-center text-sm text-amber-400">Reconectando ao chat...</p>
         ) : null}

@@ -4,6 +4,7 @@ from chatterbox.application.use_cases.get_conversation import GetConversationUse
 from chatterbox.application.use_cases.login_user import LoginUserInput, LoginUserUseCase
 from chatterbox.application.use_cases.register_user import RegisterUserInput, RegisterUserUseCase
 from chatterbox.application.use_cases.send_message import SendMessageUseCase
+from chatterbox.application.use_cases.send_message_stream import SendMessageStreamUseCase
 from chatterbox.application.use_cases.start_conversation import StartConversationUseCase
 from chatterbox.domain.enums.sender_role import SenderRole
 from chatterbox.domain.exceptions import ConversationNotFoundError, InvalidCredentialsError, UserAlreadyExistsError
@@ -114,6 +115,43 @@ async def test_send_message_persists_user_and_ai_messages(
     assert result.user_message.content == "A Terra é redonda?"
     assert result.ai_message.sender == SenderRole.AI
     assert result.ai_message.content
+
+
+@pytest.mark.asyncio
+async def test_send_message_reuses_consecutive_identical_user_message(
+    fake_repository: FakeConversationRepository,
+) -> None:
+    conversation = await StartConversationUseCase(fake_repository).execute("user-1")
+    use_case = SendMessageUseCase(fake_repository, FakeAIService())
+
+    first = await use_case.execute(conversation.id, "user-1", "Olá")
+    second = await use_case.execute(conversation.id, "user-1", "Olá")
+
+    stored = await GetConversationUseCase(fake_repository).execute(conversation.id, "user-1")
+    user_messages = [message for message in stored.messages if message.sender == SenderRole.USER]
+
+    assert len(user_messages) == 1
+    assert first.user_message.id == second.user_message.id
+    assert len(stored.messages) == 3
+
+
+@pytest.mark.asyncio
+async def test_send_message_stream_reuses_consecutive_identical_user_message(
+    fake_repository: FakeConversationRepository,
+) -> None:
+    conversation = await StartConversationUseCase(fake_repository).execute("user-1")
+    use_case = SendMessageStreamUseCase(fake_repository, FakeAIService())
+
+    first_events = [event async for event in use_case.execute(conversation.id, "user-1", "Olá")]
+    second_events = [event async for event in use_case.execute(conversation.id, "user-1", "Olá")]
+
+    stored = await GetConversationUseCase(fake_repository).execute(conversation.id, "user-1")
+    user_messages = [message for message in stored.messages if message.sender == SenderRole.USER]
+
+    assert len(user_messages) == 1
+    assert any(event.type == "user_message" for event in first_events)
+    assert not any(event.type == "user_message" for event in second_events)
+    assert any(event.type == "done" for event in second_events)
 
 
 @pytest.mark.asyncio

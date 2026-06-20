@@ -19,7 +19,9 @@ type UseChatWebSocketResult = {
   isConnected: boolean
   isSending: boolean
   error: string | null
+  canRetry: boolean
   sendMessage: (content: string) => boolean
+  retryLastMessage: () => boolean
   setMessages: (messages: ChatMessage[]) => void
   clearMessages: () => void
   finalizeStreamingMessage: () => void
@@ -55,9 +57,11 @@ export function useChatWebSocket({
   const [isConnected, setIsConnected] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryContent, setRetryContent] = useState<string | null>(null)
   const [awaitingFinalize, setAwaitingFinalize] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const pendingFinalMessageRef = useRef<ChatMessage | null>(null)
+  const lastSentContentRef = useRef<string | null>(null)
   const onUserMessageRef = useRef(onUserMessage)
 
   useEffect(() => {
@@ -75,6 +79,8 @@ export function useChatWebSocket({
     setMessages([])
     resetStreamingState()
     setError(null)
+    setRetryContent(null)
+    lastSentContentRef.current = null
   }, [resetStreamingState])
 
   const canConnect = enabled && Boolean(conversationId) && Boolean(token)
@@ -94,6 +100,8 @@ export function useChatWebSocket({
       setAwaitingFinalize(false)
       setIsSending(false)
       setError(null)
+      setRetryContent(null)
+      lastSentContentRef.current = null
     }
 
     resetSessionState()
@@ -142,6 +150,9 @@ export function useChatWebSocket({
       ws.onerror = () => {
         if (disposed) return
         setError('Falha na conexão com o chat')
+        if (lastSentContentRef.current) {
+          setRetryContent(lastSentContentRef.current)
+        }
       }
 
       ws.onmessage = (event) => {
@@ -183,11 +194,13 @@ export function useChatWebSocket({
           setStreamingText(data.ai_message.content)
           setAwaitingFinalize(true)
           setIsSending(false)
+          setRetryContent(null)
           return
         }
 
         if (data.type === 'error') {
           setError(data.detail ?? 'Erro ao processar mensagem')
+          setRetryContent(lastSentContentRef.current)
           pendingFinalMessageRef.current = null
           setStreamingText('')
           setAwaitingFinalize(false)
@@ -230,16 +243,29 @@ export function useChatWebSocket({
       return false
     }
 
+    lastSentContentRef.current = trimmed
+
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       setError('Aguardando conexão com o chat. Tente novamente em instantes.')
+      setRetryContent(trimmed)
       return false
     }
 
     setError(null)
+    setRetryContent(null)
     setIsSending(true)
     wsRef.current.send(JSON.stringify({ type: 'message', content: trimmed }))
     return true
   }, [])
+
+  const retryLastMessage = useCallback(() => {
+    const content = retryContent ?? lastSentContentRef.current
+    if (!content) {
+      return false
+    }
+
+    return sendMessage(content)
+  }, [retryContent, sendMessage])
 
   const displayMessages = streamingText
     ? [
@@ -259,7 +285,9 @@ export function useChatWebSocket({
     isConnected: canConnect && isConnected,
     isSending,
     error,
+    canRetry: Boolean(retryContent),
     sendMessage,
+    retryLastMessage,
     setMessages,
     clearMessages,
     finalizeStreamingMessage,

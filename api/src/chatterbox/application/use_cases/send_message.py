@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 
-from chatterbox.domain.entities.conversation import Conversation
+from chatterbox.application.services.outgoing_user_message import (
+    build_ai_history,
+    resolve_outgoing_user_message,
+)
 from chatterbox.domain.entities.message import Message
 from chatterbox.domain.enums.sender_role import SenderRole
 from chatterbox.domain.exceptions import ConversationNotFoundError
@@ -33,14 +36,13 @@ class SendMessageUseCase:
         if conversation is None:
             raise ConversationNotFoundError(f"Conversa {conversation_id} não encontrada")
 
-        user_message = Message(
-            conversation_id=conversation_id,
-            sender=SenderRole.USER,
-            content=content,
-        )
-        await self._conversation_repository.add_message(user_message)
+        outgoing = resolve_outgoing_user_message(conversation.messages, conversation_id, content)
+        user_message = outgoing.message
 
-        history = conversation.messages + [user_message]
+        if outgoing.is_new:
+            await self._conversation_repository.add_message(user_message)
+
+        history = build_ai_history(conversation.messages, outgoing)
         ai_content = await self._ai_service.generate_reply(history)
 
         ai_message = Message(

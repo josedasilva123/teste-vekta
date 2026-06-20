@@ -6,10 +6,12 @@ export function ChatMain() {
   const {
     messages,
     chatError,
+    canRetry,
     isLoadingMessages,
     isConnected,
     isSending,
     sendMessage,
+    retryLastMessage,
     finalizeStreamingMessage,
   } = useChatMessages()
 
@@ -27,6 +29,8 @@ export function ChatMain() {
         isConnected={isConnected}
         isLoading={isLoadingConversations || isLoadingMessages}
         error={chatError}
+        canRetry={canRetry}
+        onRetry={retryLastMessage}
         onStreamingTypingComplete={finalizeStreamingMessage}
       />
     </>
