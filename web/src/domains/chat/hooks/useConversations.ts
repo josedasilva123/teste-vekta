@@ -10,7 +10,8 @@ type UseConversationsResult = {
   pageError: string | null
   setPageError: (error: string | null) => void
   selectConversation: (id: string) => void
-  createNewChat: () => Promise<void>
+  createNewChat: () => void
+  createConversationForMessage: () => Promise<Conversation>
   applyUserMessage: (conversationId: string, message: Message) => void
 }
 
@@ -25,15 +26,12 @@ export function useConversations(): UseConversationsResult {
 
     ;(async () => {
       try {
-        let items = await listConversations()
-        if (items.length === 0) {
-          items = [await createConversation()]
-        }
+        const items = await listConversations()
 
         if (cancelled) return
 
         setConversations(items)
-        setActiveConversationId(items[0].id)
+        setActiveConversationId(items[0]?.id ?? null)
       } catch {
         if (!cancelled) {
           setPageError('Não foi possível carregar as conversas')
@@ -60,16 +58,16 @@ export function useConversations(): UseConversationsResult {
     )
   }, [])
 
-  const createNewChat = useCallback(async () => {
+  const createNewChat = useCallback(() => {
     setPageError(null)
+    setActiveConversationId(null)
+  }, [])
 
-    try {
-      const conversation = await createConversation()
-      setConversations((current) => [conversation, ...current])
-      setActiveConversationId(conversation.id)
-    } catch {
-      setPageError('Não foi possível criar uma nova conversa')
-    }
+  const createConversationForMessage = useCallback(async () => {
+    const conversation = await createConversation()
+    setConversations((current) => [conversation, ...current])
+    setActiveConversationId(conversation.id)
+    return conversation
   }, [])
 
   return {
@@ -80,6 +78,7 @@ export function useConversations(): UseConversationsResult {
     setPageError,
     selectConversation: setActiveConversationId,
     createNewChat,
+    createConversationForMessage,
     applyUserMessage,
   }
 }

@@ -7,6 +7,7 @@ type UseConversationMessagesOptions = {
   setMessages: (messages: ReturnType<typeof mapMessages>) => void
   clearMessages: () => void
   onLoadError: () => void
+  shouldSkipInitialLoad?: (conversationId: string) => boolean
 }
 
 export function useConversationMessages({
@@ -14,6 +15,7 @@ export function useConversationMessages({
   setMessages,
   clearMessages,
   onLoadError,
+  shouldSkipInitialLoad,
 }: UseConversationMessagesOptions): boolean {
   const [loadedConversationId, setLoadedConversationId] = useState<string | null>(null)
   const isLoadingMessages =
@@ -22,6 +24,12 @@ export function useConversationMessages({
   useEffect(() => {
     if (!activeConversationId) {
       clearMessages()
+      setLoadedConversationId(null)
+      return
+    }
+
+    if (shouldSkipInitialLoad?.(activeConversationId)) {
+      setLoadedConversationId(activeConversationId)
       return
     }
 
@@ -42,7 +50,7 @@ export function useConversationMessages({
     return () => {
       cancelled = true
     }
-  }, [activeConversationId, setMessages, clearMessages, onLoadError])
+  }, [activeConversationId, setMessages, clearMessages, onLoadError, shouldSkipInitialLoad])
 
   return isLoadingMessages
 }

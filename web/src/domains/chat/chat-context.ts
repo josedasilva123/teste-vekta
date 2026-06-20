@@ -7,7 +7,7 @@ export type ChatConversationsContextValue = {
   isLoadingConversations: boolean
   pageError: string | null
   selectConversation: (id: string) => void
-  createNewChat: () => Promise<void>
+  createNewChat: () => void
 }
 
 export type ChatMessagesContextValue = {
